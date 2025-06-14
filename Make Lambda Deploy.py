@@ -17,7 +17,7 @@ update_package_name=f'update_package_{currentDay}-{currentMonth}-{currentYear}'
 with open("lookups/lookup_version.json","r") as file:
     old_update=json.load(file)
 old_update["version"]=update_package_name
-old_update["notes"]="Fixed 1.21.21 block update and names for 1.20.0"
+old_update["notes"]="Thank you to JLHayde who did this update, They have fixed several blocks including hanging signs and all of the pale garden blocks."
 with open("lookups/lookup_version.json","w+") as file:
     json.dump(old_update,file,indent=2)
 try:
