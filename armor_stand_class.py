@@ -32,8 +32,8 @@ class armorstand:
                     "hero_pose": "animation.armor_stand.hero_pose",
                     "wiggle": "animation.armor_stand.wiggle",
                     "controller.pose": "controller.animation.armor_stand.pose",
-                    "controller.wiggling": "controller.animation.armor_stand.wiggle",
-                    "scale": "animation.armor_stand.ghost_blocks.scale" 		
+                    "controller.wiggling": "controller.animation.armor_stand.wiggle"
+                    #"scale": "animation.armor_stand.ghost_blocks.scale" 		
                   },
                         "scripts": {
                         "initialize": [
@@ -42,8 +42,8 @@ class armorstand:
                             ],
                         "animate": [
                               "controller.pose",
-                              "controller.wiggling",
-                              "scale" 
+                              "controller.wiggling"#,
+                              #"scale" 
                             ]
                   },
             "render_controllers": [
