@@ -35,3 +35,10 @@ structura_base.generate_with_nametags()
 print(structura_base.compile_pack())
 print(structura_base.make_nametag_block_lists())
 
+structura_base=structura_core.structura("tmp/test")
+structura_base.set_opacity(20)
+structura_base.add_model("",files_to_conver["gems"]["file"])
+structura_base.set_model_offset("",files_to_conver["gems"]["offset"])
+structura_base.generate_with_nametags()
+structura_base.compile_pack()
+

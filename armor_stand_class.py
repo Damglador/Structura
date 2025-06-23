@@ -56,9 +56,14 @@ class armorstand:
         self.geos = {"default": "geometry.armor_stand.larger_render"}
         self.textures =  {"default": "textures/entity/armor_stand"}
     def add_model(self, name):
-        prog_name = "ghost_blocks_{}".format(name.replace(" ","_").lower())
-        self.geos[prog_name] = "geometry.armor_stand.{}".format(prog_name)
+        prog_name = f"ghost_blocks_{name.replace(' ','_').lower()}"
+        self.geos[prog_name] = f"geometry.armor_stand.{prog_name}"
         self.textures[prog_name] = "textures/entity/{}".format(prog_name)
+        for i in range(12):
+            self.textures[f"{prog_name}_{i}"] = "textures/entity/{}".format(prog_name)
+            self.geos[f"{prog_name}_{i}"] = f"geometry.armor_stand.{prog_name}_{i}"
+        
+        
 
     def export(self, pack_name):
         self.stand["minecraft:client_entity"]["description"]["textures"] = self.textures

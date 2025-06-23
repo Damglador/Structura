@@ -47,9 +47,8 @@ class structura:
         self.structure_files={}
         self.rc=rcc.render_controller()
         self.armorstand_entity = armor_stand_class.armorstand()
-        visual_name=pack_name
         self.animation = animation_class.animations()
-        self.exclude_list=["minecraft:structure_block","minecraft:air"]
+        self.exclude_list=[]
         self.opacity=0.8
         self.longestY=0
         self.unsupported_blocks=[]
@@ -75,7 +74,6 @@ class structura:
             for name in name_tags:
                 text_file.write("{}\n".format(name))
     def make_big_model(self,offset):
-        self.rc=brc.render_controller()
         file_names=[]
         for name in list(self.structure_files.keys()):
             file_names.append(self.structure_files[name]["file"])
@@ -86,9 +84,7 @@ class structura:
         layers=12
         if (struct2make.get_size()[1]<=12):
             layers=struct2make.get_size()[1]
-        for i in range(layers):
-            self.armorstand_entity.add_model(str(i))
-            self.rc.add_geometry(str(i))
+        self.rc.add_model("ghost_blocks",big=True)
         self.big_offset=offset
         self.all_blocks=self._add_blocks_to_geo(struct2make,"",export_big=True)
         self.armorstand_entity.export(self.pack_name)
@@ -101,16 +97,15 @@ class structura:
                 offset=self.structure_files[model_name]["offsets"]
             self.rc.add_model(model_name)
             self.armorstand_entity.add_model(model_name)
-            ## temp folder would be a good idea
-            copyfile(self.structure_files[model_name]["file"], "{}/{}.mcstructure".format(self.pack_name,model_name))
+            copyfile(self.structure_files[model_name]["file"], f"{self.pack_name}/{model_name}.mcstructure")
             if debug:
                 print(self.structure_files[model_name]['offsets'])
             struct2make = structure_reader.process_structure(self.structure_files[model_name]["file"])
+            print(model_name)
             blocks=self._add_blocks_to_geo(struct2make,model_name)
             self.structure_files[model_name]["block_list"]=blocks
-            ##consider temp folder
             self.armorstand_entity.export(self.pack_name)## this may be in the wrong spot, but transfered from 1.5
-        
+        self.armorstand.export(self.pack_name)
     def make_nametag_block_lists(self):
         ## consider temp file
         file_names=[]
@@ -142,22 +137,12 @@ class structura:
         if export_big:
             self.structure_files[model_name]['offsets'][0]-=xlen.item()+7
             self.structure_files[model_name]['offsets'][2]-=zlen.item()+7
-        armorstand = asgc.armorstandgeo(model_name,alpha = self.opacity, size=[xlen, ylen, zlen], offsets=self.structure_files[model_name]['offsets'])
-
-        if ylen > self.longestY:
-            update_animation=True
-            longestY = ylen
-        else:
-            update_animation=False
+        self.armorstand = asgc.armorstandgeo(model_name,alpha = self.opacity, size=[xlen, ylen, zlen], offsets=self.structure_files[model_name]['offsets'])
         for y in range(ylen):
-            
             #creates the layer for controlling. Note there is implied formating here
             #for layer names
             if y<12:
-                armorstand.make_layer(y)
-                #adds links the layer name to an animation
-                if update_animation and not export_big:
-                    self.animation.insert_layer(y)
+                self.armorstand.make_layer(y)
             non_air=struct2make.get_layer_blocks(y)
             for loc in non_air:
                 x=int(loc[0])
@@ -165,16 +150,11 @@ class structura:
                 block = struct2make.get_block(x, y, z)
                 blk_name=block["name"].replace("minecraft:", "")
                 blockProp=self._process_block(block)
-                rot = blockProp[0]
-                top = blockProp[1]
-                variant = blockProp[2]
-                open_bit = blockProp[3]
-                data = blockProp[4]
                 if debug:
-                    armorstand.make_block(x, y, z, blk_name, rot = rot, top = top,variant = variant, trap_open=open_bit, data=data, big = export_big)
+                    self.armorstand.make_block(x, y, z, blk_name, blockProp, big = export_big)
                 else:
                     try:
-                        armorstand.make_block(x, y, z, blk_name, rot = rot, top = top,variant = variant, trap_open=open_bit, data=data, big = export_big)
+                        self.armorstand.make_block(x, y, z, blk_name, rot = rot, top = top,variant = variant, trap_open=open_bit, data=data, big = export_big)
                     except Exception as e:
                         unsupported = UnsupportedBlock((x,y,z), block, variant)
                         self.unsupported_blocks.append(unsupported)
@@ -187,10 +167,10 @@ class structura:
                         self.dead_blocks[block["name"]][variant]+=1
             ## consider temp file
         if export_big:
-            armorstand.export_big(self.pack_name)
+            self.armorstand.export_big(self.pack_name)
             self.animation.export_big(self.pack_name,self.big_offset)
         else:
-            armorstand.export(self.pack_name)
+            self.armorstand.finalize_model(model_name,self.pack_name)
             self.animation.export(self.pack_name)
         return struct2make.get_block_list()
     def compile_pack(self, overwrite=False):
@@ -217,39 +197,19 @@ class structura:
         
         return f'{self.pack_name}.mcpack'
     def _process_block(self,block):
-        rot = None
-        top = False
-        open_bit = False
-        data=0
-        variant="default"
+        properties={"variant":"default"}
         for key in nbt_def.keys():
-            if nbt_def[key]== "variant" and key in block["states"].keys():
-                variant = [key,block["states"][key]]
-            if nbt_def[key] == "rot" and key in block["states"].keys():
+            if key in block["states"].keys():
+                datavalue=block["states"][key]
                 try:
-                    rot = int(block["states"][key])
+                    datavalue=int(datavalue)
                 except:
-                    rot = str(block["states"][key])
-                
-            if nbt_def[key]== "top" and key in block["states"].keys():
-                top = bool(block["states"][key])
-            if nbt_def[key]== "open_bit" and "open_bit" in block["states"].keys():
-                open_bit = bool(block["states"][key])
-            if nbt_def[key]== "data" and key in block["states"].keys():
-                data = int(block["states"][key])
-            if key == "rail_direction" and key in block["states"].keys():
-                data = str(block["states"][key].as_unsigned)
-                if "rail_data_bit" in block["states"].keys():
-                    data += "-"+str(block["states"]["rail_data_bit"].as_unsigned)
-
-        if "wood_type" in block["states"].keys():
-            variant = ["wood_type",block["states"]["wood_type"]]
-            if block["name"] == "minecraft:wood":
-                keys = block["states"]["wood_type"]
-                if bool(block["states"]["stripped_bit"]):
-                    keys+="_stripped"
-                variant = ["wood",keys]
-        return [rot, top, variant, open_bit, data]
+                    datavalue=str(datavalue)
+                if nbt_def[key] in properties.keys():
+                    properties[nbt_def[key]] += [datavalue]
+                else:
+                    properties[nbt_def[key]] = [key, datavalue]
+        return properties
     def get_skipped(self):
         ## temp folder would be a good idea
         if len(self.unsupported_blocks)>1:

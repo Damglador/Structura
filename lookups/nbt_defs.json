@@ -5,6 +5,7 @@
 	"huge_mushroom_bits":"data",
 	"wall_block_type":"variant",
 	"direction":"rot",
+	"wood_type":"variant",
 	"head_piece_bit":"data",
 	"old_log_type":"variant",
 	"new_log_type":"variant",
@@ -41,5 +42,6 @@
 	"vine_direction_bits":"rot",
 	"height":"data",
 	"hanging": "data",
-	"multi_face_direction_bits":"data"
+	"multi_face_direction_bits":"data",
+	"rail_data_bit":"data"
 }

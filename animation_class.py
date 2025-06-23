@@ -1,4 +1,8 @@
-import json
+try:
+    import ujson as json
+except:
+    print("using built in json, but that is much slower, consider installing ujson")
+    import json
 import os
 
 
@@ -29,12 +33,6 @@ class animations:
         self.poses[11] = "animation.armor_stand.cancan_b_pose"
         self.poses[12] = "animation.armor_stand.hero_pose"
 
-    def insert_layer(self, y):
-        name = "layer_{}".format(y)
-        for i in range(12):
-            if y % (12) != i:
-                self.sizing["animations"][self.poses[i+1]]["bones"][name] = {"scale": 0.08}
-
     def export(self, pack_name):
         path_to_ani = "{}/animations/armor_stand.animation.json".format(
             pack_name)
@@ -61,14 +59,6 @@ class animations:
             f"({int(offset[1])}-query.position(1))*16",
             f"((query.position(2)-{int(offset[2])})*math.cos(query.body_y_rotation)-(query.position(0)-{int(offset[0])})*math.sin(query.body_y_rotation))*16"]
         
-        
-##        for i in range(12):
-##            name = "layer_{}".format(i)
-##            self.sizing["animations"][self.poses[i+1]]["bones"][name]={"position":[f"{offset[0]}-query.position(0)",
-##                                                                                   f"{offset[1]}-query.position(1)",
-##                                                                                   f"{offset[2]}-query.position(2)"]}
-##            self.sizing["animations"][self.poses[i+1]]["bones"][name]["rotation"]=["0", f"-query.body_y_rotation", "0"]
-##            self.sizing["animations"][self.poses[i+1]]["bones"][name]["scale"]   = 16.0
         path_to_ani = f"{pack_name}/animations/armor_stand.animation.json"
         try:
 

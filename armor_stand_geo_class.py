@@ -38,6 +38,7 @@ class armorstandgeo:
             self.block_uv = json.load(f)
         self.name = name.replace(" ","_").lower()
         self.stand = {}
+        self.stand["minecraft:geometry"] = []
         self.offsets = offsets
         self.offsets[0]+=8
         self.offsets[2]+=7
@@ -59,32 +60,78 @@ class armorstandgeo:
         
         ## these blocks are either not needed, or cause issue. Grass is banned because the terrian_texture.json has a biome map in it. If someone wants to fix we can un-bann it
         self.excluded = ["air", "structure_block"]
-
-    def export(self, pack_folder):
-        start = time.time()
-        ## This exporter just packs up the armorstand json files and dumps them where it should go. as well as exports the UV file
+    def finalize_model(self,model_name,pack_folder):
         self.add_blocks_to_bones()
-        self.geometry["description"]["texture_height"] = len(
-            self.uv_map.keys())
-        self.stand["minecraft:geometry"] = [self.geometry] ## this is insuring the geometries are imported, there is an implied refference other places.
-        path_to_geo = "{}/models/entity/armor_stand.ghost_blocks_{}.geo.json".format(
-            pack_folder,self.name)
-        os.makedirs(os.path.dirname(path_to_geo), exist_ok=True)
-        i=0
-        
-        for index in range(len(self.stand["minecraft:geometry"][0]["bones"])):
-            if "name" not in self.stand["minecraft:geometry"][0]["bones"][index].keys():
-                self.stand["minecraft:geometry"][0]["bones"][index]["name"]="empty_row+{}".format(i)
-                self.stand["minecraft:geometry"][0]["bones"][index]["parent"]="ghost_blocks"
-                self.stand["minecraft:geometry"][0]["bones"][index]["pivot"]=[0.5,0.5,0.5]
-                i+=1
-        start=time.time()
-        with open(path_to_geo, "w+") as json_file:
-            json.dump(self.stand, json_file)
-        texture_name = "{}/textures/entity/ghost_blocks_{}.png".format(
-            pack_folder,self.name)
+        geometries={}
+        geometries[model_name]={}
+        geometries[model_name]["description"]={}
+        geometries[model_name]["description"]["identifier"] = f"geometry.armor_stand.ghost_blocks_{model_name.replace(' ','_')}"
+        geometries[model_name]["description"]["texture_width"] = 1
+        geometries[model_name]["description"]["texture_height"] = len(self.uv_map.keys())
+        geometries[model_name]["description"]["visible_bounds_width"] = 5120
+        geometries[model_name]["description"]["visible_bounds_height"] = 5120
+        geometries[model_name]["description"]["visible_bounds_offset"] = [0, 1.5, 0]     
+        geometries[model_name]["bones"]=[{"name":"ghost_blocks","pivot": [-8, 0, 8],"origin":[0,0,0]}]
+        for i in range(len(self.layers)):
+            layer_name=self.layers[i]
+            geometries[layer_name] = {}
+            geometries[layer_name]["description"] = {}
+            geometries[layer_name]["description"]["identifier"] = f"geometry.armor_stand.ghost_blocks_{model_name}_{i}"
+            geometries[layer_name]["description"]["texture_width"] = 1
+            geometries[layer_name]["description"]["texture_height"] = len(self.uv_map.keys())
+            geometries[layer_name]["description"]["visible_bounds_width"] = 5120
+            geometries[layer_name]["description"]["visible_bounds_height"] = 5120
+            geometries[layer_name]["description"]["visible_bounds_offset"] = [0, 1.5, 0]
+            geometries[layer_name]["bones"]=[{"name": "ghost_blocks","pivot": [0, 0, 0]},## i am not sure this should be this value for pivot
+                                             {"name": layer_name,"parent": "ghost_blocks","pivot": [0, 0, 0]}]## i am not sure this should be this value for pivot
+        for key in self.blocks.keys():
+            layer_name = self.blocks[key]["parent"]
+            geometries[layer_name]["bones"].append(self.blocks[key])
+            geometries[model_name]["bones"].append(self.blocks[key])
+        for layer_name in self.layers:
+            self.stand["minecraft:geometry"].append(geometries[layer_name])
+
+        texture_name = f"{pack_folder}/textures/entity/ghost_blocks_{model_name}.png"
         os.makedirs(os.path.dirname(texture_name), exist_ok=True)
         self.save_uv(texture_name)
+    def export(self, pack_folder):
+        geometries={}
+        size=list(map(int,self.size))
+        geometries["default"]={}
+        geometries["default"]["description"]={}
+        geometries["default"]["description"]["identifier"] = "geometry.armor_stand.default"
+        geometries["default"]["description"]["texture_width"] = 1
+        geometries["default"]["description"]["texture_height"] = 1
+        geometries["default"]["description"]["visible_bounds_width"] = 5120
+        geometries["default"]["description"]["visible_bounds_height"] = 5120
+        geometries["default"]["description"]["visible_bounds_offset"] = [0, 1.5, 0]     
+        geometries["default"]["bones"]=[{"name":"ghost_blocks","pivot": [-8, 0, 8],"origin":[0,0,0]}]
+        default_geo=[{"size": size,
+                        "uv": {
+                                "north": {"uv": [0, 0], "uv_size": [1, 1]},
+                                "east": {"uv": [0, 0], "uv_size": [1, 1]},
+                                "south": {"uv": [0, 0], "uv_size": [1, 1]},
+                                "west": {"uv": [0, 0], "uv_size": [1, 1]},
+                                "up": {"uv": [1, 1], "uv_size": [-1, -1]},
+                                "down": {"uv": [1, 1], "uv_size": [-1, -1]}
+                        }},
+                     {
+                        "size": size,
+                        "uv": {
+                                "north": {"uv": [0, 3], "uv_size": [1, -1]},
+                                "east": {"uv": [0, 3], "uv_size": [1, -1]},
+                                "south": {"uv": [0, 3], "uv_size": [1, -1]},
+                                "west": {"uv": [0, 3], "uv_size": [1, -1]},
+                                "up": {"uv": [0, 1], "uv_size": [1, -1]},
+                                "down": {"uv": [0, 3], "uv_size": [1, -1]}
+                        }}]
+        geometries["default"]["bones"][0]["cubes"]=default_geo
+        self.stand["minecraft:geometry"].append(geometries["default"])
+        path_to_geo = "{}/models/entity/armor_stand.ghost_blocks.geo.json".format(pack_folder,self.name)
+        os.makedirs(os.path.dirname(path_to_geo), exist_ok=True)            
+        with open(path_to_geo, "w+") as json_file:
+            json.dump(self.stand, json_file, indent=2)
+        
         
     def export_big(self, pack_folder):
         ## This exporter just packs up the armorstand json files and dumps them where it should go. as well as exports the UV file
@@ -134,7 +181,6 @@ class armorstandgeo:
             geometries[layer_name]["bones"]=[{"name": "ghost_blocks","pivot": [0, 0, 0]},## i am not sure this should be this value for pivot
                                              {"name": layer_name,"parent": "ghost_blocks","pivot": [0, 0, 0]}]## i am not sure this should be this value for pivot
         
-        ## Here is the bug....
         for key in self.blocks.keys():
             layer_name = self.blocks[key]["parent"]
             geometries[layer_name]["bones"].append(self.blocks[key])
@@ -160,31 +206,40 @@ class armorstandgeo:
         self.geometry["bones"].append(
             {"name": layer_name, "parent": "ghost_blocks"})#, "pivot": [-8, 0, 8]})
 
-    def make_block(self, x, y, z, block_name, rot=None, top=False,data=0, trap_open=False, parent=None,variant="default", big = False):
+    def make_block(self, x, y, z, block_name, properties, big = False):
         # make_block handles all the block processing, This function does need cleanup and probably should be broken into other helperfunctions for ledgiblity.
         block_type = self.defs[block_name]
         if block_type!="ignore":
-            ghost_block_name = "block_{}_{}_{}".format(x, y, z)
+            ghost_block_name = "b_{}_{}_{}".format(x, y, z)
             self.blocks[ghost_block_name] = {}
             self.blocks[ghost_block_name]["name"] = ghost_block_name
             layer_name = "layer_{}".format(y % (12))
             if layer_name not in self.layers:
                 self.layers.append(layer_name)
             self.blocks[ghost_block_name]["parent"] = layer_name
-            block_type = self.defs[block_name]
             ## hardcoded to true for now, but this is when the variants will be called
             shape_variant="default"
-            if block_type == "hopper" and rot!=0:
-                shape_variant="side"
-            elif block_type == "trapdoor" and trap_open:
-                shape_variant = "open"
-            elif block_type == "lever" and trap_open:
-                shape_variant = "on"
-            elif top:
-                shape_variant = "top"
-
-            if data!=0 and debug:
-                print(data)
+            variant=properties["variant"][1]
+            data=0
+            if "data" in properties.keys():
+                data = properties["data"][1]
+                if debug:
+                    print(data)
+            rot=None
+            if "rot" in properties.keys():
+                if len(properties["rot"])>2:
+                    rot=max(properties["rot"][1:])
+                rot = properties["rot"][1]
+##            if block_type == "hopper":
+##                if not("0" in properties["rot"]):
+##                    shape_variant="side"
+##            elif block_type == "trapdoor" and trap_open:
+##                shape_variant = "open"
+##            elif block_type == "lever" and trap_open:
+##                shape_variant = "on"
+##            elif top:
+##                shape_variant = "top"
+                
             
 
             block_shapes = self.block_shapes[block_type][shape_variant]
