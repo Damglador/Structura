@@ -153,11 +153,8 @@ class structura:
             
             #creates the layer for controlling. Note there is implied formating here
             #for layer names
-            if y<12:
-                armorstand.make_layer(y)
-                #adds links the layer name to an animation
-                if update_animation and not export_big:
-                    self.animation.insert_layer(y)
+            if not export_big:
+                self.animation.normal_mode()
             non_air=struct2make.get_layer_blocks(y)
             for loc in non_air:
                 x=int(loc[0])

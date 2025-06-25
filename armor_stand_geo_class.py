@@ -50,7 +50,15 @@ class armorstandgeo:
         self.size = size
         self.bones = []
         self.errors={}
-        self.layers=[]
+        self.layers={}
+        for i in range(12):
+            layer_name = f"layer_{i}"
+            self.layers[layer_name]={}
+            self.layers[layer_name]["name"]=layer_name
+            self.layers[layer_name]["parent"]="ghost_blocks"
+            self.layers[layer_name]["pivot"]=[0,0,0]
+            self.layers[layer_name]["cubes"]=[]
+            
         self.uv_array = None
         self.pre_gen_blocks={}
         ## The stuff below is a horrible cludge that should get cleaned up. +1 karma to whomever has a better plan for this.
@@ -71,13 +79,6 @@ class armorstandgeo:
             pack_folder,self.name)
         os.makedirs(os.path.dirname(path_to_geo), exist_ok=True)
         i=0
-        
-        for index in range(len(self.stand["minecraft:geometry"][0]["bones"])):
-            if "name" not in self.stand["minecraft:geometry"][0]["bones"][index].keys():
-                self.stand["minecraft:geometry"][0]["bones"][index]["name"]="empty_row+{}".format(i)
-                self.stand["minecraft:geometry"][0]["bones"][index]["parent"]="ghost_blocks"
-                self.stand["minecraft:geometry"][0]["bones"][index]["pivot"]=[0.5,0.5,0.5]
-                i+=1
         start=time.time()
         with open(path_to_geo, "w+") as json_file:
             json.dump(self.stand, json_file)
@@ -155,10 +156,11 @@ class armorstandgeo:
 
     
     def make_layer(self, y):
-        # sets up a layer for us to refference in the animation controller later. Layers are moved during the poses 
-        layer_name = "layer_{}".format(y)
-        self.geometry["bones"].append(
-            {"name": layer_name, "parent": "ghost_blocks"})#, "pivot": [-8, 0, 8]})
+        pass
+##        # sets up a layer for us to refference in the animation controller later. Layers are moved during the poses 
+##        layer_name = "layer_{}".format(y)
+##        self.geometry["bones"].append(
+##            {"name": layer_name, "parent": "ghost_blocks"})#, "pivot": [-8, 0, 8]})
 
     def make_block(self, x, y, z, block_name, rot=None, top=False,data=0, trap_open=False, parent=None,variant="default", big = False):
         # make_block handles all the block processing, This function does need cleanup and probably should be broken into other helperfunctions for ledgiblity.
@@ -168,9 +170,7 @@ class armorstandgeo:
             self.blocks[ghost_block_name] = {}
             self.blocks[ghost_block_name]["name"] = ghost_block_name
             layer_name = "layer_{}".format(y % (12))
-            if layer_name not in self.layers:
-                self.layers.append(layer_name)
-            self.blocks[ghost_block_name]["parent"] = layer_name
+            
             block_type = self.defs[block_name]
             ## hardcoded to true for now, but this is when the variants will be called
             shape_variant="default"
@@ -188,10 +188,12 @@ class armorstandgeo:
             
 
             block_shapes = self.block_shapes[block_type][shape_variant]
-            self.blocks[ghost_block_name]["pivot"] = [block_shapes["center"][0] - (x + self.offsets[0]),
-                                                      y + block_shapes["center"][1] + self.offsets[1],
-                                                      z + block_shapes["center"][2] + self.offsets[2]]
-            self.blocks[ghost_block_name]["inflate"] = -0.03
+            
+            #self.layers[layer_name]["pivot"]
+            #self.blocks[ghost_block_name]["pivot"] = [block_shapes["center"][0] - (x + self.offsets[0]),
+            #                                          y + block_shapes["center"][1] + self.offsets[1],
+            #                                          z + block_shapes["center"][2] + self.offsets[2]]
+            #self.blocks[ghost_block_name]["inflate"] = -0.03
 
             block_uv = self.block_uv[block_type]["default"]
             if shape_variant in self.block_uv[block_type].keys():
@@ -201,13 +203,14 @@ class armorstandgeo:
             if str(data) in self.block_shapes[block_type].keys():
                 block_shapes = self.block_shapes[block_type][str(data)]
             if block_type in self.block_rotations.keys() and rot is not None:
-                self.blocks[ghost_block_name]["rotation"] = copy.deepcopy(self.block_rotations[block_type][str(rot)])
-                if big:
-                    self.blocks[ghost_block_name]["rotation"][1]+=180
+                #self.blocks[ghost_block_name]["rotation"] = copy.deepcopy(self.block_rotations[block_type][str(rot)])
+                #if big:
+                #    self.blocks[ghost_block_name]["rotation"][1]+=180
+                pass
             else:
                 if debug:
                     print("no rotation for block type {} found".format(block_type))
-            self.blocks[ghost_block_name]["cubes"] = []
+            #self.blocks[ghost_block_name]["cubes"] = []
             uv_idx=0
 
             for i in range(len(block_shapes["size"])):
@@ -236,7 +239,8 @@ class armorstandgeo:
                     blockUV[dir]["uv_size"] = block_uv["uv_sizes"][dir][uv_idx]
 
                 block["uv"] = blockUV
-                self.blocks[ghost_block_name]["cubes"].append(block)
+                self.layers[layer_name]["cubes"].append(block)
+#                self.blocks[ghost_block_name]["cubes"].append(block)
 
     def save_uv(self, name):
         # saves the texture file where you tell it to
@@ -333,8 +337,8 @@ class armorstandgeo:
 
     def add_blocks_to_bones(self):
         # helper function for adding all of the bars, this is called during the writing step
-        for key in self.blocks.keys():
-            self.geometry["bones"].append(self.blocks[key])
+        for key in self.layers.keys():
+            self.geometry["bones"].append(self.layers[key])
 
     def get_block_texture_paths(self, blockName, variant = ""):
         # helper function for getting the texture locations from the vanilla files.

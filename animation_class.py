@@ -28,16 +28,17 @@ class animations:
         self.poses[10] = "animation.armor_stand.cancan_a_pose"
         self.poses[11] = "animation.armor_stand.cancan_b_pose"
         self.poses[12] = "animation.armor_stand.hero_pose"
-
+    def normal_mode(self)
+        for y7 in range(12):
+            self.insert_layer( y)
     def insert_layer(self, y):
         name = "layer_{}".format(y)
         self.sizing["animations"][self.poses[0]]["bones"][name] = {"scale": 16}
         for i in range(12):
             if y % (12) != i:
-                self.sizing["animations"][self.poses[i+1]]["bones"][name] = {"scale": 1}
+                self.sizing["animations"][self.poses[i+1]]["bones"][name] = {"scale": 0.08}
             else:
                 self.sizing["animations"][self.poses[i+1]]["bones"][name] = {"scale": 16}
-
     def export(self, pack_name):
         path_to_ani = "{}/animations/armor_stand.animation.json".format(
             pack_name)
