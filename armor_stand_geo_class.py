@@ -39,8 +39,8 @@ class armorstandgeo:
         self.name = name.replace(" ","_").lower()
         self.stand = {}
         self.offsets = offsets
-        self.offsets[0]+=8
-        self.offsets[2]+=7
+        self.offsets[0]+=0.5
+        self.offsets[2]+=-0.5
         self.alpha=alpha
         self.texture_list = []
         self.geometry = {}
@@ -154,14 +154,6 @@ class armorstandgeo:
             os.makedirs(os.path.dirname(texture_name), exist_ok=True)
             self.save_uv(texture_name)
 
-    
-    def make_layer(self, y):
-        pass
-##        # sets up a layer for us to refference in the animation controller later. Layers are moved during the poses 
-##        layer_name = "layer_{}".format(y)
-##        self.geometry["bones"].append(
-##            {"name": layer_name, "parent": "ghost_blocks"})#, "pivot": [-8, 0, 8]})
-
     def make_block(self, x, y, z, block_name, rot=None, top=False,data=0, trap_open=False, parent=None,variant="default", big = False):
         # make_block handles all the block processing, This function does need cleanup and probably should be broken into other helperfunctions for ledgiblity.
         block_type = self.defs[block_name]
@@ -188,12 +180,6 @@ class armorstandgeo:
             
 
             block_shapes = self.block_shapes[block_type][shape_variant]
-            
-            #self.layers[layer_name]["pivot"]
-            #self.blocks[ghost_block_name]["pivot"] = [block_shapes["center"][0] - (x + self.offsets[0]),
-            #                                          y + block_shapes["center"][1] + self.offsets[1],
-            #                                          z + block_shapes["center"][2] + self.offsets[2]]
-            #self.blocks[ghost_block_name]["inflate"] = -0.03
 
             block_uv = self.block_uv[block_type]["default"]
             if shape_variant in self.block_uv[block_type].keys():
@@ -202,19 +188,30 @@ class armorstandgeo:
                 shape_variant=str(data)
             if str(data) in self.block_shapes[block_type].keys():
                 block_shapes = self.block_shapes[block_type][str(data)]
+            rotation_vector = [0,0,0]
             if block_type in self.block_rotations.keys() and rot is not None:
-                #self.blocks[ghost_block_name]["rotation"] = copy.deepcopy(self.block_rotations[block_type][str(rot)])
-                #if big:
-                #    self.blocks[ghost_block_name]["rotation"][1]+=180
+                rotation_vector = copy.deepcopy(self.block_rotations[block_type][str(rot)])
+                
+                if big:
+                    rotation_vector[1]+=180
                 pass
             else:
                 if debug:
                     print("no rotation for block type {} found".format(block_type))
-            #self.blocks[ghost_block_name]["cubes"] = []
             uv_idx=0
+            make_solo_block = False
+            for angle in rotation_vector:
+                if not(angle in [0,90,180,270]):
+                    make_solo_block=True
+                    #print(f"{block_name}-{block_type}-{str(rot)}-{rotation_vector}")
+                #Temp fix for rotations
+                if abs(angle)>0:
+                    make_solo_block=True
+            
+            
 
             for i in range(len(block_shapes["size"])):
-                uv = self.block_name_to_uv(block_name,variant=variant,shape_variant=shape_variant,index=i)
+                uv = self.block_name_to_uv(block_name,variant=variant,shape_variant=shape_variant,index=i,rotation=rotation_vector)
                 block={}
                 if len(block_uv["uv_sizes"]["up"])>i:
                     uv_idx=i
@@ -227,21 +224,124 @@ class armorstandgeo:
                     zoff = block_shapes["offsets"][i][2]
                 block["origin"] = [-1*(x + self.offsets[0]) + xoff, y + yoff + self.offsets[1], z + zoff + self.offsets[2]]
                 block["size"] = block_shapes["size"][i]
+                block["inflate"]=-0.03
 
                 if "rotation" in block_shapes.keys():
                     block["rotation"] = block_shapes["rotation"][i]
                     
 
                 blockUV=dict(uv)
-                for dir in ["up", "down", "east", "west", "north", "south"]:
-                    blockUV[dir]["uv"][0] += block_uv["offset"][dir][uv_idx][0]
-                    blockUV[dir]["uv"][1] += block_uv["offset"][dir][uv_idx][1]
-                    blockUV[dir]["uv_size"] = block_uv["uv_sizes"][dir][uv_idx]
+                rotation_info = self.face_rotation(rotation_vector)
+                for direction in rotation_info.keys():
+                    new_direction = rotation_info[direction][0]
+                    blockUV[direction]["uv"][0] += block_uv["offset"][new_direction][uv_idx][0]
+                    blockUV[direction]["uv"][1] += block_uv["offset"][new_direction][uv_idx][1]
+                    blockUV[direction]["uv_size"] = block_uv["uv_sizes"][new_direction][uv_idx]
 
                 block["uv"] = blockUV
-                self.layers[layer_name]["cubes"].append(block)
-#                self.blocks[ghost_block_name]["cubes"].append(block)
-
+                if make_solo_block:
+                    if ghost_block_name in self.layers.keys():
+                        self.layers[ghost_block_name]["cubes"].append(block)
+                    else:
+                        self.layers[ghost_block_name]={}
+                        self.layers[ghost_block_name]["name"] = ghost_block_name
+                        self.layers[ghost_block_name]["parent"] = layer_name
+                        self.layers[ghost_block_name]["pivot"] = [block_shapes["center"][0] - (x + self.offsets[0]),
+                                                      y + block_shapes["center"][1] + self.offsets[1],
+                                                      z + block_shapes["center"][2] + self.offsets[2]]
+                        self.layers[ghost_block_name]["rotation"] = copy.deepcopy(rotation_vector)
+                       
+                        self.layers[ghost_block_name]["cubes"]=[block]
+                else:
+                    self.layers[layer_name]["cubes"].append(block)
+    def face_rotation(self,rotation):
+        rotation_info={"north":["north",0],
+                       "south":["south",0],
+                       "west":["west",0],
+                       "east":["east",0],
+                       "up":["up",0],
+                       "down":["down",0]}
+##        print(rotation)
+##        match rotation[0]:
+##            case 90:
+##                rotation_info["north"]=["up",0]
+##                rotation_info["east"]=["east",90]
+##                rotation_info["south"]=["down",0]
+##                rotation_info["west"]=["west",270]
+##                rotation_info["up"]=["south",0]
+##                rotation_info["down"]=["north",0]
+##            case 180:
+##                rotation_info["north"]=["south",180]
+##                rotation_info["east"]=["east",180]
+##                rotation_info["south"]=["north",180]
+##                rotation_info["west"]=["west",180]
+##                rotation_info["up"]=["down",180]
+##                rotation_info["down"]=["up",180]
+##            case 270:
+##                rotation_info["north"]=["up",180]
+##                rotation_info["east"]=["east",270]
+##                rotation_info["south"]=["down",180]
+##                rotation_info["west"]=["west",90]
+##                rotation_info["up"]=["south",0]
+##                rotation_info["down"]=["north",180]
+##
+##        match rotation[1]:
+##            case 90:
+##                rotation_info["north"]=rotation_info["west"]
+##                rotation_info["east"]=rotation_info["north"]
+##                rotation_info["south"]=rotation_info["east"]
+##                rotation_info["west"]=rotation_info["south"]
+##                rotation_info["up"]=rotation_info["up"]
+##                rotation_info["down"]=rotation_info["down"]
+##                rotation_info["up"][1]+=90
+##                rotation_info["down"][1]+=270
+##            case 180:
+##                rotation_info["north"]=rotation_info["south"]
+##                rotation_info["east"]=rotation_info["west"]
+##                rotation_info["south"]=rotation_info["north"]
+##                rotation_info["west"]=rotation_info["east"]
+##                rotation_info["up"]=rotation_info["up"]
+##                rotation_info["down"]=rotation_info["down"]
+##                rotation_info["up"][1]+=180
+##                rotation_info["down"][1]+=180
+##            case 270:
+##                rotation_info["north"]=rotation_info["east"]
+##                rotation_info["east"]=rotation_info["south"]
+##                rotation_info["south"]=rotation_info["west"]
+##                rotation_info["west"]=rotation_info["north"]
+##                rotation_info["up"]=rotation_info["up"]
+##                rotation_info["down"]=rotation_info["down"]
+##                rotation_info["up"][1]+=90
+##                rotation_info["down"][1]+=270
+##        match rotation[2]:
+##            case 90:
+##                rotation_info["north"]=rotation_info["north"]
+##                rotation_info["east"]=rotation_info["down"]
+##                rotation_info["south"]=rotation_info["south"]
+##                rotation_info["west"]=rotation_info["up"]
+##                rotation_info["up"]=rotation_info["west"]
+##                rotation_info["down"]=rotation_info["east"]
+##                rotation_info["south"][1]+=90
+##                rotation_info["north"][1]+=270
+##            case 180:
+##                rotation_info["north"]=rotation_info["north"]
+##                rotation_info["east"]=rotation_info["west"]
+##                rotation_info["south"]=rotation_info["south"]
+##                rotation_info["west"]=rotation_info["east"]
+##                rotation_info["up"]=rotation_info["down"]
+##                rotation_info["down"]=rotation_info["up"]
+##                rotation_info["south"][1]+=180
+##                rotation_info["north"][1]+=180
+##            case 270:
+##                rotation_info["north"]=rotation_info["north"]
+##                rotation_info["east"]=rotation_info["down"]
+##                rotation_info["south"]=rotation_info["south"]
+##                rotation_info["west"]=rotation_info["up"]
+##                rotation_info["up"]=rotation_info["east"]
+##                rotation_info["down"]=rotation_info["west"]
+##                rotation_info["south"][1]+=90
+##                rotation_info["north"][1]+=270
+        return rotation_info
     def save_uv(self, name):
         # saves the texture file where you tell it to
         if self.uv_array is None:
@@ -298,12 +398,12 @@ class armorstandgeo:
             temp_new[startshape[0]:, :, :] = image_array
             self.uv_array = temp_new
 
-    def block_name_to_uv(self, block_name, variant = "",shape_variant="default",index=0,data=0):
+    def block_name_to_uv(self, block_name, variant = "",shape_variant="default",index=0,data=0,rotation=[0,0,0]):
         
         # helper function maps the the section of the uv file to the side of the block
         temp_uv = {}
         if block_name not in self.excluded:  # if you dont want a block to be rendered, exclude the UV
-
+            rotation_info = self.face_rotation(rotation)
             block_type = self.defs[block_name]
             
             texture_files = self.get_block_texture_paths(block_name, variant = variant)
@@ -322,16 +422,19 @@ class armorstandgeo:
                         texture_files[side]=corrected_textures[side][index]
                         if debug:
                             print("{}: {}".format(side,texture_files[side]))
-            for key in texture_files.keys():
-                if texture_files[key] not in self.uv_map.keys():
+            for direction in texture_files.keys():
+                texture_key=f"{texture_files[direction]}_{rotation[0]}_{rotation[1]}_{rotation[2]}"
+                base_texture = texture_files[direction]
+                if texture_key not in self.uv_map.keys():
                     try:
-                        self.extend_uv_image(
-                            "{}/{}.png".format(self.ref_resource_pack, texture_files[key]))
-                        self.uv_map[texture_files[key]] = len(self.uv_map.keys())
+                        ##rotate image here. use rotation_info[direction][1]
+                        self.extend_uv_image(f"{self.ref_resource_pack}/{base_texture}.png")
+                        self.uv_map[texture_key] = len(self.uv_map.keys())
+                        
                     except Exception as e:
-                        raise RuntimeError("Failed to load texture {}".format(texture_files[key]))
-                temp_uv[key] = {
-                    "uv": [0, self.uv_map[texture_files[key]]], "uv_size": [1, 1]}
+                        raise RuntimeError(f"Failed to load texture {base_texture}")
+                temp_uv[direction] = {
+                    "uv": [0, self.uv_map[texture_key]], "uv_size": [1, 1]}
 
         return temp_uv
 

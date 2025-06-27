@@ -44,7 +44,7 @@ if not(os.path.exists("lookups")):
     except FileNotFoundError:
         logger.info("Did not find bundled lookup files.")
         logger.info("Downloading lookup files")
-        updater.update("https://update.structuralab.com/structuraUpdate","Structura1-6","")
+        updater.update("https://update.structuralab.com/structuraUpdate","Structura1-6","none")
     except [Exception]:
         logger.critical("Error fetching lookup files, details below.")
         logger.critical(traceback.format_exc())

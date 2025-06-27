@@ -28,8 +28,8 @@ class animations:
         self.poses[10] = "animation.armor_stand.cancan_a_pose"
         self.poses[11] = "animation.armor_stand.cancan_b_pose"
         self.poses[12] = "animation.armor_stand.hero_pose"
-    def normal_mode(self)
-        for y7 in range(12):
+    def normal_mode(self):
+        for y in range(12):
             self.insert_layer( y)
     def insert_layer(self, y):
         name = "layer_{}".format(y)
