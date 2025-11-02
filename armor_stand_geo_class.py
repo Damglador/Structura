@@ -5,6 +5,7 @@ except:
     import json
 from PIL import Image
 from numpy import array, ones, uint8, zeros
+from operator import add
 import copy
 import os
 import time
@@ -15,7 +16,7 @@ logger = logging.getLogger("build_logger")
 
 
 class armorstandgeo:
-    def __init__(self, name, alpha = 0.8,offsets=[0,0,0], size=[64, 64, 64], ref_pack="Vanilla_Resource_Pack"):
+    def __init__(self, name, alpha = 0.5,offsets=[0,0,0], size=[64, 64, 64], ref_pack="Vanilla_Resource_Pack"):
         self.ref_resource_pack = ref_pack
         ## we load all of these items containing the mapping of blocks to the some property that is either hidden, implied or just not clear
         with open("{}/blocks.json".format(self.ref_resource_pack)) as f:
@@ -164,17 +165,21 @@ class armorstandgeo:
         # make_block handles all the block processing, This function does need cleanup and probably should be broken into other helperfunctions for ledgiblity.
         block_type = self.defs[block_name]
         if block_type!="ignore":
-            ghost_block_name = "block_{}_{}_{}".format(x, y, z)
-            self.blocks[ghost_block_name] = {}
-            self.blocks[ghost_block_name]["name"] = ghost_block_name
+            slice_name = "slice_{}".format(y)
+            ghost_block_coordinates = "block_{}_{}_{}".format(x, y, z)
+            temp_block_group = {}
+            temp_block_group["name"] = slice_name
+            
             layer_name = "layer_{}".format(y % (12))
             if layer_name not in self.layers:
                 self.layers.append(layer_name)
-            self.blocks[ghost_block_name]["parent"] = layer_name
+            
+            temp_block_group["parent"] = layer_name
             block_type = self.defs[block_name]
+            
             ## hardcoded to true for now, but this is when the variants will be called
             shape_variant="default"
-            if block_type == "hopper" and rot!=0:
+            if block_type == "hopper" and rot is not None and rot != 0:
                 shape_variant="side"
             elif block_type == "trapdoor" and trap_open:
                 shape_variant = "open"
@@ -182,34 +187,38 @@ class armorstandgeo:
                 shape_variant = "on"
             elif top:
                 shape_variant = "top"
-
+            
             if data!=0 and debug:
                 print(data)
             
-
+            
             block_shapes = self.block_shapes[block_type][shape_variant]
-            self.blocks[ghost_block_name]["pivot"] = [block_shapes["center"][0] - (x + self.offsets[0]),
-                                                      y + block_shapes["center"][1] + self.offsets[1],
-                                                      z + block_shapes["center"][2] + self.offsets[2]]
-            self.blocks[ghost_block_name]["inflate"] = -0.03
-
+            temp_block_group["pivot"] = [ block_shapes["center"][0] - (x + self.offsets[0]) \
+                                        , block_shapes["center"][1] +  y + self.offsets[1]  \
+                                        , block_shapes["center"][2] +  z + self.offsets[2] ]
+            #temp_block_group["inflate"] = -0.03
+            
+            
             block_uv = self.block_uv[block_type]["default"]
             if shape_variant in self.block_uv[block_type].keys():
                 block_uv = self.block_uv[block_type][shape_variant]
+            
             if str(data) in self.block_uv[block_type].keys():
                 shape_variant=str(data)
             if str(data) in self.block_shapes[block_type].keys():
                 block_shapes = self.block_shapes[block_type][str(data)]
+            
             if block_type in self.block_rotations.keys() and rot is not None:
-                self.blocks[ghost_block_name]["rotation"] = copy.deepcopy(self.block_rotations[block_type][str(rot)])
+                temp_block_group["rotation"] = copy.deepcopy(self.block_rotations[block_type][str(rot)])
                 if big:
-                    self.blocks[ghost_block_name]["rotation"][1]+=180
+                    temp_block_group["rotation"][1] += 180
             else:
                 if debug:
                     print("no rotation for block type {} found".format(block_type))
-            self.blocks[ghost_block_name]["cubes"] = []
-            uv_idx=0
-
+            temp_block_group["cubes"] = []
+            uv_idx = 0
+            
+            
             for i in range(len(block_shapes["size"])):
                 uv = self.block_name_to_uv(block_name,variant=variant,shape_variant=shape_variant,index=i)
                 block={}
@@ -234,9 +243,92 @@ class armorstandgeo:
                     blockUV[dir]["uv"][0] += block_uv["offset"][dir][uv_idx][0]
                     blockUV[dir]["uv"][1] += block_uv["offset"][dir][uv_idx][1]
                     blockUV[dir]["uv_size"] = block_uv["uv_sizes"][dir][uv_idx]
-
+                
                 block["uv"] = blockUV
-                self.blocks[ghost_block_name]["cubes"].append(block)
+                temp_block_group["cubes"].append(block)
+            ## next i
+            
+            for eachGroup in [ temp_block_group ]:
+                hasNestedRotation = 0
+                copiedGroups = []
+
+                isRotatedGroup = ( "rotation" in eachGroup.keys() ) and ( "pivot" in eachGroup.keys() )
+                if( isRotatedGroup and ( eachGroup["rotation"] is None or len( eachGroup["rotation"] ) != 3 ) ):
+                    isRotatedGroup = False
+                if( isRotatedGroup and ( eachGroup["pivot"]    is None or len( eachGroup["pivot"] ) != 3 ) ):
+                    isRotatedGroup = False
+                
+                for eachCube in temp_block_group["cubes"]:
+                    isCubeReadyToWrite = False
+                    
+                    isRotatedCube = ( "rotation" in eachCube.keys() ) and ( "pivot" in eachCube.keys() )
+                    if( isRotatedCube and ( eachCube["rotation"] is None or len( eachCube["rotation"] ) != 3 ) ):
+                        isRotatedCube = False
+                    if( isRotatedCube and ( eachCube["pivot"]    is None or len( eachCube["pivot"] ) != 3 ) ):
+                        isRotatedCube = False
+                    
+                    isOnlyRotatedCube = ( "rotation" in eachCube.keys() )
+                    if( isOnlyRotatedCube and ( eachCube["rotation"] is None or len( eachCube["rotation"] ) != 3 ) ):
+                        isOnlyRotatedCube = False
+                    
+                    if( isOnlyRotatedCube ):
+                        ## If cube has "rotation" but is missing "pivot" point,  instead use center of the cube
+                        ##    "https://learn.microsoft.com/en-us/minecraft/creator/reference/content/schemasreference/schemas/minecraftschema_geometry_1.16.0?view=minecraft-bedrock-stable#:~:text=%2F%2F%20If%20this%20field%20is%20specified%2C%20rotation%20of%20this%20cube%20occurs%20around%20this%20point%2C%20otherwise%20its%20rotation%20is%20around%20the%20center%20of%20the%20box%2E"
+                        eachCube["pivot"] = [ eachCube["origin"][0] + eachCube["size"][0] / 2.0 \
+                                            , eachCube["origin"][1] + eachCube["size"][1] / 2.0 \
+                                            , eachCube["origin"][2] + eachCube["size"][2] / 2.0 ]
+                        isRotatedCube = True
+                    
+                    
+                    if( not(isRotatedCube) and isRotatedGroup ):
+                        ## Apply group's "rotation" and "pivot" to cube
+                        eachCube["rotation"] = [ eachGroup["rotation"][0], eachGroup["rotation"][1], eachGroup["rotation"][2] ]
+                        eachCube["pivot"]    = [ eachGroup["pivot"   ][0], eachGroup["pivot"   ][1], eachGroup["pivot"   ][2] ]
+                    #elif( not(isRotatedGroup) and isRotatedCube ):
+                        ## Keep existing cube "rotation" and "pivot"
+                    elif( isRotatedGroup and isRotatedCube and  eachCube["pivot"] == eachGroup["pivot"] ):
+                        ## Same "pivot" point...  Matrix-Sum cube and group "rotation" value arrays
+                        eachCube["rotation"] = [ eachGroup["rotation"][0] + eachCube["rotation"][0], eachGroup["rotation"][1] + eachCube["rotation"][1], eachGroup["rotation"][2] + eachCube["rotation"][2] ]
+                    elif( isRotatedGroup and isRotatedCube ):
+                        #TODO: Merge cube rotation with group rotation,  around cube's ["pivot"] point...  not a lot of fun math
+                        hasNestedRotation += 1
+                        newGroup =  { "parent": eachGroup["name"], "name": eachGroup["name"] + "___" + ghost_block_coordinates + "___" + str(hasNestedRotation) }
+                        
+                        for primitiveKey in [ "mirror", "inflate", "debug", "render_group_id", "binding" ]:
+                            if primitiveKey in eachGroup.keys():
+                                newGroup[primitiveKey] = eachGroup[primitiveKey]
+                        
+                        for objectKey in [ "pivot", "rotation", "locators", "poly_mesh", "texture_meshes" ]:
+                            if objectKey in eachGroup.keys():
+                                newGroup[objectKey] = copy.deepcopy( eachGroup[objectKey] )
+                        
+                        newGroup["cubes"] = []
+                        newGroup["cubes"].append( copy.deepcopy( eachCube ) )
+                        copiedGroups.append( newGroup )
+                        eachCube["flag_unnest_from_group"] = True
+                
+                ## next eachCube
+                
+                
+                if eachGroup["name"] in self.blocks.keys():
+                    for eachCube in temp_block_group["cubes"]:
+                        if( hasNestedRotation == 0 or ( ( "flag_unnest_from_group" not in eachCube.keys() ) and ( eachCube["flag_unnest_from_group"] != True ) ) ):
+                            #TOCONSIDER: Git rid of unnecessary deepcopies
+                            self.blocks[eachGroup["name"]]["cubes"].append( copy.deepcopy(eachCube) )
+                else:
+                    if "rotation" in eachGroup.keys():
+                        del eachGroup["rotation"]
+                    if "pivot" in eachGroup.keys():
+                        del eachGroup["pivot"]
+                    #TOCONSIDER: Git rid of unnecessary deepcopies
+                    self.blocks[eachGroup["name"]] = copy.deepcopy( eachGroup )
+                
+                for newChildGroup in copiedGroups:
+                    #TOCONSIDER: Git rid of unnecessary deepcopies
+                    self.blocks[newChildGroup["name"]] = copy.deepcopy( newChildGroup )
+            
+            ## next eachGroup
+
 
     def save_uv(self, name):
         # saves the texture file where you tell it to
@@ -334,6 +426,7 @@ class armorstandgeo:
     def add_blocks_to_bones(self):
         # helper function for adding all of the bars, this is called during the writing step
         for key in self.blocks.keys():
+            #TODO: add merging logic for slice group
             self.geometry["bones"].append(self.blocks[key])
 
     def get_block_texture_paths(self, blockName, variant = ""):
