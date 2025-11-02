@@ -1,0 +1,23 @@
+﻿Lookup,English
+title,Structura
+error,Error
+browse file,You need to browse for a structure file!
+unique tag,The Name Tag mut be unique
+pack name error,Pack already exists or pack name is empty
+no pack name,You need a Name
+no structure files,You need to add some structures
+name tag,Name Tag
+offset,Offset
+corner,Corner
+icon,Icon File
+update,Update
+browse,Browse
+packname,Pack Name
+advance,Advanced
+lists,Make Block Lists
+bigbuild,Big Build Mode
+remove,Remove Model
+makepack,Make Pack
+addmodel,Add Model
+getcords,Get Global Cords
+transparency,Transparency

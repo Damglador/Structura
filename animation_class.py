@@ -60,10 +60,11 @@ class animations:
         print(offset)
         self.default_size["animations"]["animation.armor_stand.ghost_blocks.scale"]["bones"]["ghost_blocks"]["rotation"]=[0,"-query.body_y_rotation", 0]
         self.default_size["animations"]["animation.armor_stand.ghost_blocks.scale"]["bones"]["ghost_blocks"]["position"]=[
-            f"(-(query.position(0)-{int(offset[0])})*math.cos(query.body_y_rotation)-(query.position(2)-{int(offset[2])})*math.sin(query.body_y_rotation))*16",
+            f"(-(query.position(0)-{int(offset[0])-7.5})*math.cos(query.body_y_rotation)-(query.position(2)-{int(offset[2])-7.5})*math.sin(query.body_y_rotation))*16",
             f"({int(offset[1])}-query.position(1))*16",
-            f"((query.position(2)-{int(offset[2])})*math.cos(query.body_y_rotation)-(query.position(0)-{int(offset[0])})*math.sin(query.body_y_rotation))*16"]
+            f"((query.position(2)-{int(offset[2])-7.5})*math.cos(query.body_y_rotation)-(query.position(0)-{int(offset[0])-7.5})*math.sin(query.body_y_rotation))*16"]
         path_to_ani = f"{pack_name}/animations/armor_stand.animation.json"
+        print(self.default_size["animations"]["animation.armor_stand.ghost_blocks.scale"]["bones"]["ghost_blocks"]["position"])
         try:
 
             os.makedirs(os.path.dirname(path_to_ani), exist_ok=True)

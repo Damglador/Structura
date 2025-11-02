@@ -91,8 +91,6 @@ class structura:
             self.rc.add_geometry(str(i))
         self.armorstand_entity.add_scale()#scale animation was removed from normal build this needs to be added back for big builds
         self.big_offset=offset
-        self.big_offset[0] -= 6.5#adjusting for corner of arm
-        self.big_offset[2] -= 7.5
         self.all_blocks=self._add_blocks_to_geo(struct2make,"",export_big=True)
         self.armorstand_entity.export(self.pack_name)
     def generate_with_nametags(self):

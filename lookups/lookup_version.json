@@ -1,6 +1,6 @@
 {
-  "version": "update_package_27-6-2025",
+  "version": "update_package_2-11-2025",
   "author": "RavinMaddHatter",
   "update_url": "https://update.structuralab.com/structuraUpdate",
-  "notes": "Thank you to JLHayde who did this update, They have fixed several blocks including hanging signs and all of the pale garden blocks. This is a re-deploy."
+  "notes": "NOTE: a new version of structura will need to be manually downloaded. This is to address lag issues. No further updates for 1.6 will be issued. https://github.com/RavinMaddHatter/Structura/releases"
 }
