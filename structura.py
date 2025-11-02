@@ -3,9 +3,20 @@ import argparse
 import sys
 import shutil
 import traceback
+import updater
+import json
+from structura_core import structura
+from turtle import color
+from numpy import array, int32, minimum
+import nbtlib
+
+from tkinter import ttk,filedialog,messagebox
+from tkinter import StringVar, Button, Label, Entry, Tk, Checkbutton, END, ACTIVE
+from tkinter import filedialog, Scale,DoubleVar,HORIZONTAL,IntVar,Listbox, ANCHOR
+
 
 from log_config import get_logger
-
+structura_update_version = "Structura1-7"
 # CLI Args
 parser = argparse.ArgumentParser(description="Structura app that generates Resource packs from .mcstructure files.")
 
@@ -28,7 +39,6 @@ if debug:
     logger = get_logger(level="debug")
     logger.debug("Debug mode is on")
 
-import updater
 if not(os.path.exists("lookups")):
     logger.warning("No lookups found, fetching...")
     try:
@@ -44,20 +54,10 @@ if not(os.path.exists("lookups")):
     except FileNotFoundError:
         logger.info("Did not find bundled lookup files.")
         logger.info("Downloading lookup files")
-        updater.update("https://update.structuralab.com/structuraUpdate","Structura1-6","")
+        updater.update("https://update.structuralab.com/structuraUpdate",structura_update_version,"")
     except [Exception]:
         logger.critical("Error fetching lookup files, details below.")
         logger.critical(traceback.format_exc())
-
-import json
-from structura_core import structura
-from turtle import color
-from numpy import array, int32, minimum
-import nbtlib
-
-from tkinter import ttk,filedialog,messagebox
-from tkinter import StringVar, Button, Label, Entry, Tk, Checkbutton, END, ACTIVE
-from tkinter import filedialog, Scale,DoubleVar,HORIZONTAL,IntVar,Listbox, ANCHOR
 
 
 def browseStruct():
@@ -72,7 +72,7 @@ def update():
     with open(r"lookups\lookup_version.json") as file:
         version_data = json.load(file)
         logger.info(version_data["version"])
-    updated = updater.update(version_data["update_url"],"Structura1-6",version_data["version"])
+    updated = updater.update(version_data["update_url"],structura_update_version,version_data["version"])
     if updated:
         with open(r"lookups\lookup_version.json") as file:
             version_data = json.load(file)
@@ -325,10 +325,10 @@ icon_var.set("lookups/pack_icon.png")
 sliderVar = DoubleVar()
 model_name_var = StringVar()
 xvar = DoubleVar()
-xvar.set(-0.5)
+xvar.set(0)
 yvar = DoubleVar()
 zvar = DoubleVar()
-zvar.set(-0.5)
+zvar.set(0)
 check_var = IntVar()
 export_list = IntVar()
 big_build = IntVar()

@@ -10,6 +10,7 @@ import copy
 import os
 import time
 import logging
+import re
 
 debug=False
 logger = logging.getLogger("build_logger")
@@ -40,8 +41,8 @@ class armorstandgeo:
         self.name = name.replace(" ","_").lower()
         self.stand = {}
         self.offsets = offsets
-        self.offsets[0]+=8
-        self.offsets[2]+=7
+        self.offsets[0] += 0.5
+        self.offsets[2] -= 0.5
         self.alpha=alpha
         self.texture_list = []
         self.geometry = {}
@@ -136,9 +137,13 @@ class armorstandgeo:
                                              {"name": layer_name,"parent": "ghost_blocks","pivot": [0, 0, 0]}]## i am not sure this should be this value for pivot
         
         ## Here is the bug....
+        print(self.blocks.keys())
+        
+        print(geometries.keys())
         for key in self.blocks.keys():
             layer_name = self.blocks[key]["parent"]
-            geometries[layer_name]["bones"].append(self.blocks[key])
+            if layer_name in geometries.keys():
+                geometries[layer_name]["bones"].append(self.blocks[key])
         self.stand["minecraft:geometry"].append(geometries["default"])
         for layer_name in self.layers:
             self.stand["minecraft:geometry"].append(geometries[layer_name])

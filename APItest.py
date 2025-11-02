@@ -22,6 +22,10 @@ if os.path.exists("tmp/all_blocks.mcpack"):
     os.remove("tmp/all_blocks.mcpack")
 if os.path.exists("tmp/all_blocks Nametags.txt"):
     os.remove("tmp/all_blocks Nametags.txt")
+if os.path.exists("tmp/bigBuild.mcpack"):
+    os.remove("tmp/bigBuild.mcpack")
+if os.path.exists("tmp/bigBuild Nametags.txt"):
+    os.remove("tmp/bigBuild Nametags.txt")
 structura_base=structura_core.structura("tmp/all_blocks")
 structura_base.set_opacity(20)
 
@@ -35,3 +39,13 @@ structura_base.generate_with_nametags()
 print(structura_base.compile_pack())
 print(structura_base.make_nametag_block_lists())
 
+structura_base=structura_core.structura("tmp/bigBuild")
+structura_base.set_opacity(20)
+for name_tag, info in files_to_conver.items():
+    print(f'{name_tag}, {info}')
+    structura_base.add_model(name_tag,info["file"])
+
+
+structura_base.make_big_model([-132,-56,-65])
+#print(structura_base.make_nametag_block_lists())
+print(structura_base.compile_pack())

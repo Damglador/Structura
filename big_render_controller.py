@@ -18,7 +18,7 @@ class render_controller:
         self.rc["render_controllers"][self.rcname]["arrays"]={"geometries":{}}
         self.rc["render_controllers"][self.rcname]["arrays"]["geometries"]["array.ghost_geo"]=["geometry.default"]
         self.geometry= "array.ghost_geo[ variable.armor_stand.pose_index ]"
-        self.textures = ["variable.armor_stand.pose_index != 0 ? Texture.ghost_blocks_1 : (Texture.default)"]
+        self.textures = ["variable.armor_stand.pose_index != 0 ? Texture.ghost_blocks_0 : (Texture.default)"]
         self
     def add_geometry(self,name):
         name='geometry.ghost_blocks_{}'.format(name)

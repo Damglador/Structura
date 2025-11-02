@@ -59,7 +59,9 @@ class armorstand:
         prog_name = "ghost_blocks_{}".format(name.replace(" ","_").lower())
         self.geos[prog_name] = "geometry.armor_stand.{}".format(prog_name)
         self.textures[prog_name] = "textures/entity/{}".format(prog_name)
-
+    def add_scale(self):
+        self.stand["minecraft:client_entity"]["description"]["animations"]["scale"] = "animation.armor_stand.ghost_blocks.scale"
+        self.stand["minecraft:client_entity"]["description"]["scripts"]["animate"].append("scale")
     def export(self, pack_name):
         self.stand["minecraft:client_entity"]["description"]["textures"] = self.textures
         self.stand["minecraft:client_entity"]["description"]["geometry"] = self.geos

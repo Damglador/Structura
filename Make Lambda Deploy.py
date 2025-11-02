@@ -17,7 +17,7 @@ update_package_name=f'update_package_{currentDay}-{currentMonth}-{currentYear}'
 with open("lookups/lookup_version.json","r") as file:
     old_update=json.load(file)
 old_update["version"]=update_package_name
-old_update["notes"]="Thank you to JLHayde who did this update, They have fixed several blocks including hanging signs and all of the pale garden blocks."
+old_update["notes"]="NOTE: a new version of structura will need to be manually downloaded. This is to address lag issues. No further updates for 1.6 will be issued. https://github.com/RavinMaddHatter/Structura/releases"
 with open("lookups/lookup_version.json","w+") as file:
     json.dump(old_update,file,indent=2)
 try:

@@ -63,15 +63,6 @@ class animations:
             f"(-(query.position(0)-{int(offset[0])})*math.cos(query.body_y_rotation)-(query.position(2)-{int(offset[2])})*math.sin(query.body_y_rotation))*16",
             f"({int(offset[1])}-query.position(1))*16",
             f"((query.position(2)-{int(offset[2])})*math.cos(query.body_y_rotation)-(query.position(0)-{int(offset[0])})*math.sin(query.body_y_rotation))*16"]
-        
-        
-##        for i in range(12):
-##            name = "layer_{}".format(i)
-##            self.sizing["animations"][self.poses[i+1]]["bones"][name]={"position":[f"{offset[0]}-query.position(0)",
-##                                                                                   f"{offset[1]}-query.position(1)",
-##                                                                                   f"{offset[2]}-query.position(2)"]}
-##            self.sizing["animations"][self.poses[i+1]]["bones"][name]["rotation"]=["0", f"-query.body_y_rotation", "0"]
-##            self.sizing["animations"][self.poses[i+1]]["bones"][name]["scale"]   = 16.0
         path_to_ani = f"{pack_name}/animations/armor_stand.animation.json"
         try:
 
