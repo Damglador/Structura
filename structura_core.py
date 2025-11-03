@@ -1,7 +1,4 @@
-import traceback
-
 import nbtlib.nbt
-
 import armor_stand_geo_class as asgc
 import armor_stand_class ,structure_reader ,animation_class ,manifest ,os ,glob ,json ,shutil 
 import render_controller_class as rcc
@@ -269,7 +266,6 @@ class structura:
 
         return count
 
-    @staticmethod
     def get_lookup_version() -> str:
         """
         Get the version from lookup_version.json.

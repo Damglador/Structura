@@ -5,7 +5,7 @@ a = Analysis(
     ['structura.py'],
     pathex=[],
     binaries=[],
-    datas=[("lookups/*", "lookups"), ("Vanilla_Resource_Pack/*", "Vanilla_Resource_Pack")],
+    datas=[],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -22,28 +22,17 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='structura',
+    name='Structura',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True,
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='pack_icon.ico'
 )
-
-#coll = COLLECT(
-#    exe,
-#    a.binaries,
-#    a.zipfiles,
-#    a.datas,
-#    strip=False,
-#    upx=True,
-#    name='structura'
-#)

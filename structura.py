@@ -2,11 +2,10 @@ import os
 import argparse
 import sys
 import shutil
-import traceback
 import updater
 import json
 import lang_parse
-from structura_core import structura
+
 from turtle import color
 from numpy import array, int32, minimum
 import nbtlib
@@ -15,10 +14,21 @@ from tkinter import ttk,filedialog,messagebox
 from tkinter import StringVar, Button, Label, Entry, Tk, Checkbutton, END, ACTIVE
 from tkinter import filedialog, Scale,DoubleVar,HORIZONTAL,IntVar,Listbox, ANCHOR
 
-
-from log_config import get_logger
 structura_update_version = "Structura1-7"
 
+if not(os.path.exists("lookups")):
+    print("getting files")
+    updater.update("https://update.structuralab.com/structuraUpdate",structura_update_version,"")
+from structura_core import structura
+settings={"lang":"English"}
+if os.path.exists("settings.json"):
+    with open("settings.json") as file:
+        settings = json.load(file)
+else:
+    with open("settings.json","w+") as file:
+        json.dump(settings,file)
+langs = lang_parse.parse()
+lang = langs[settings["lang"]]
 
 # CLI Args
 parser = argparse.ArgumentParser(description="Structura app that generates Resource packs from .mcstructure files.")
@@ -33,43 +43,6 @@ parser.add_argument("--debug", "-db", action='store_true', help='Enable debug mo
 parser.add_argument("--update", action='store_true', help='Run updater')
 
 args = parser.parse_args()
-logger = get_logger()
-logger.info("Launched Structura.")
-
-debug = args.debug
-if debug:
-    os.environ["DEBUG"] = "1"
-    logger = get_logger(level="debug")
-    logger.debug("Debug mode is on")
-settings={"lang":"English"}
-if os.path.exists("settings.json"):
-    with open("settings.json") as file:
-        settings = json.load(file)
-else:
-    with open("settings.json","w+") as file:
-        json.dump(settings,file)
-langs = lang_parse.parse()
-lang = langs[settings["lang"]]
-if not(os.path.exists("lookups")):
-    logger.warning("No lookups found, fetching...")
-    try:
-        base_path = sys._MEIPASS
-        for resource in ["lookups", "Vanilla_Resource_Pack"]:
-            target_dir = os.path.join(os.getcwd(), resource)
-            resource_dir = os.path.join(base_path, resource)
-
-            shutil.copytree(resource_dir, target_dir)
-            logger.info(f"Resources extracted to {target_dir}")
-    # If using `pyinstaller --onefile` instead of .spec the datas are not
-    # bundled in the frozen directory, Fallback to download if we error.
-    except FileNotFoundError:
-        logger.info("Did not find bundled lookup files.")
-        logger.info("Downloading lookup files")
-        updater.update("https://update.structuralab.com/structuraUpdate",structura_update_version,"")
-    except [Exception]:
-        logger.critical("Error fetching lookup files, details below.")
-        logger.critical(traceback.format_exc())
-
 
 def browseStruct():
     #browse for a structure file.
@@ -82,7 +55,6 @@ def browseIcon():
 def update():
     with open(r"lookups\lookup_version.json") as file:
         version_data = json.load(file)
-        logger.info(version_data["version"])
     updated = updater.update(version_data["update_url"],structura_update_version,version_data["version"])
     if updated:
         with open(r"lookups\lookup_version.json") as file:
@@ -223,21 +195,6 @@ def delete_model():
         models.pop(listbox.get(ACTIVE))
     listbox.delete(ANCHOR)
 
-
-def log_build(structura_build):
-
-    logger.info("Build Results...")
-    unique_blocks = list(set(structura_build.unsupported_blocks))
-    total_count = structura_build.get_unique_blocks_count()
-    unsupported_count = len(unique_blocks)
-    coverage =  round((100 - (unsupported_count / total_count) * 100), 1)
-    logger.info("Total Unique Blocks: %s" % total_count)
-    logger.info("Total Unsupported Unique Blocks {}".format(unsupported_count))
-    logger.info("Coverage of '{}' is {}% ".format(structura_build.pack_name,coverage))
-    for i in unique_blocks:
-        logger.info("\t {}".format(i.block["name"]))
-
-
 def runFromGui():
     ##wrapper for a gui.
     global models, offsets
@@ -265,8 +222,7 @@ def runFromGui():
         structura_base.set_opacity(sliderVar.get())
         if len(icon_var.get())>0:
             structura_base.set_icon(icon_var.get())
-        if debug:
-            logger.debug(models)
+
         
         if not(check_var.get()):
             structura_base.add_model("",FileGUI.get())
@@ -293,8 +249,6 @@ def runFromGui():
             structura_base.generate_nametag_file()
             structura_base.compile_pack()
 
-        log_build(structura_base)
-
 # Command Line interface
 if args.structure and args.pack_name:
 
@@ -305,7 +259,6 @@ if args.structure and args.pack_name:
 
     pack_file = "{}.mcpack".format(args.pack_name)
     if args.overwrite and os.path.isfile(pack_file):
-        logger.info("Removing existing pack {}".format(pack_file))
         os.remove(pack_file)
 
     structura_base = structura(args.pack_name)
@@ -319,11 +272,29 @@ if args.structure and args.pack_name:
     structura_base.generate_with_nametags()
     structura_base.compile_pack()
 
-    log_build(structura_base)
 
     # Exit Script
     sys.exit(0)
 
+def updateLang():
+    lang = language.get()
+    title_text.config(text = lang["title"])
+    modle_name_lb.config(text=lang["name tag"])
+    cord_lb.config(text=lang["offset"])
+    cord_lb_big.config(text=lang["corner"])
+    icon_lb.config(text=lang["icon"])
+    updateButton.config(text=lang["update"])
+    IconButton.config(text=lang["browse"])
+    file_lb.config(text=lang["structurefile"])
+    packName_lb.config(text=lang["packname"])
+    advanced_check.config(text=lang["advance"])
+    export_check.config(text=lang["lists"])
+    big_build_check.config(text=lang["bigbuild"])
+    deleteButton.config(text=lang["remove"])
+    saveButton.config(text=lang["makepack"])
+    modelButton.config(text=lang["addmodel"])
+    get_cords_button.config(text=lang["getcords"])
+    transparency_lb.config(text=lang["transparency"])
 offsetLbLoc=4
 offsets={}
 root = Tk()
@@ -332,6 +303,7 @@ models={}
 FileGUI = StringVar()
 packName = StringVar()
 icon_var = StringVar()
+language = StringVar()
 icon_var.set("lookups/pack_icon.png")
 sliderVar = DoubleVar()
 model_name_var = StringVar()
@@ -362,8 +334,6 @@ updateButton = Button(root, text=lang["update"], command=update)
 IconButton = Button(root, text=lang["browse"], command=browseIcon)
 file_lb = Label(root, text=lang["structurefile"])
 packName_lb = Label(root, text=lang["packname"])
-if debug:
-    debug_lb = Label(root, text="Debug Mode",fg='Red').place(x=0,y=2)
 packButton = Button(root, text=lang["browse"], command=browseStruct)
 advanced_check = Checkbutton(root, text=lang["advance"], variable=check_var, onvalue=1, offvalue=0, command=box_checked)
 export_check = Checkbutton(root, text=lang["lists"], variable=export_list, onvalue=1, offvalue=0)

@@ -9,12 +9,7 @@ from operator import add
 import copy
 import os
 import time
-import logging
 import re
-
-debug=False
-logger = logging.getLogger("build_logger")
-
 
 class armorstandgeo:
     def __init__(self, name, alpha = 0.5,offsets=[0,0,0], size=[64, 64, 64], ref_pack="Vanilla_Resource_Pack"):

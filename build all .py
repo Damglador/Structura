@@ -9,6 +9,34 @@ try:
     shutil.rmtree("temp/")
 except:
     pass
+import PyInstaller.__main__
+import os
+
+# Define the path to your main script
+script_path = 'structura.py' 
+
+# Define the output directory (optional)
+output_dir = 'dist' 
+
+# Define the name for your executable (optional)
+app_name = 'Structura'
+
+# Construct the list of PyInstaller arguments
+# This example creates a one-file, windowed executable with a custom name
+pyinstaller_args = [
+    script_path,
+    '--onefile',
+    '--windowed',
+    f'--name={app_name}',
+    f'--distpath={output_dir}' # Specify the output directory
+]
+
+# Run PyInstaller
+PyInstaller.__main__.run(pyinstaller_args)
+
+print(f"PyInstaller finished. Check the '{output_dir}' directory for your executable.")
+
+
 
 currentDay = datetime.now().day
 currentMonth = datetime.now().month
@@ -30,7 +58,6 @@ shutil.make_archive("temp", 'zip', "temp")
 if os.path.exists(update_package_name+".zip"):
     os.remove(update_package_name+".zip")
 os.rename(f'temp.zip',update_package_name+".zip")
-
 copyfile("animation_class.py", "temp/animation_class.py")
 copyfile("armor_stand_class.py", "temp/armor_stand_class.py")
 copyfile("armor_stand_geo_class.py", "temp/armor_stand_geo_class.py")
@@ -52,3 +79,5 @@ if os.path.exists(update_package_name+".zip"):
     except:
         print(f'lambda_package_{currentDay}-{currentMonth}-{currentYear}.zip doesnt exist')
 os.rename(f'temp.zip',f'lambda_package_{currentDay}-{currentMonth}-{currentYear}.zip')
+shutil.move(update_package_name+".zip",os.path.join("dist",update_package_name+".zip"))
+shutil.move(f'lambda_package_{currentDay}-{currentMonth}-{currentYear}.zip',os.path.join("dist",f'lambda_package_{currentDay}-{currentMonth}-{currentYear}.zip'))
