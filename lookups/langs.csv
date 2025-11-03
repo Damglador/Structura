@@ -1,24 +1,24 @@
-﻿Lookup,English,Test
-title,Structura,test
-error,Error,test
-browse file,You need to browse for a structure file!,test
-unique tag,The Name Tag mut be unique,test
-pack name error,Pack already exists or pack name is empty,test
-no pack name,You need a Name,test
-no structure files,You need to add some structures,test
-name tag,Name Tag,test
-offset,Offset,test
-corner,Corner,test
-icon,Icon File,test
-update,Update,test
-browse,Browse,test
-packname,Pack Name,test
-advance,Advanced,test
-lists,Make Block Lists,test
-bigbuild,Big Build Mode,test
-remove,Remove Model,test
-makepack,Make Pack,test
-addmodel,Add Model,test
-getcords,Get Global Cords,test
-transparency,Transparency,test
-structurefile,Structure file,test
+﻿Lookup,English,Español,Test
+title,Structura,Structura,test
+error,Error,Error,test
+browse file,You need to browse for a structure file!,¡Necesitas encontrar un archivo de estructura!,test
+unique tag,The Name Tag mut be unique,La etiqueta debe ser única,test
+pack name error,Pack already exists or pack name is empty,El paquete ya existe o el nombre del paquete está vacío,test
+no pack name,You need a Name,Necesitas un nombre,test
+no structure files,You need to add some structures,Necesitas añadir varias estructuras,test
+name tag,Name Tag,Nombre De La Etiqueta,test
+offset,Offset,Desplazamiento,test
+corner,Corner,Esquina,test
+icon,Icon File,Archivo de icono,test
+update,Update,Actualizar,test
+browse,Browse,Buscar,test
+packname,Pack Name,Nombre Del Paquete,test
+advance,Advanced,Avanzado,test
+lists,Make Block Lists,Crear Lista De Bloques,test
+bigbuild,Big Build Mode,Modo De Construcción Grande,test
+remove,Remove Model,Remover Modelo,test
+makepack,Make Pack,Crear Paquete,test
+addmodel,Add Model,Añadir Modelo,test
+getcords,Get Global Cords,Obtener Coordenadas Globales,test
+transparency,Transparency,Transparencia,test
+structurefile,Structure file,Archivo de estructura,test
